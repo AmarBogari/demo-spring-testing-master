@@ -26,13 +26,11 @@ public class EmployeeService {
 	}
 
 	public Employee insertNewEmployee(Employee employee) {
-		employee.setId(10);
 		employee.setId(null);
 		return employeeRepository.save(employee);
 	}
 
 	public Employee updateEmployeeById(long id, Employee replacement) {
-		replacement.setId(null);
 		replacement.setId(id);
 		return employeeRepository.save(replacement);
 	}
