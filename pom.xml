@@ -158,233 +158,251 @@
     </dependency>
   </dependencies>
 
-  <build>
+<build>
+  <plugins>
+    <!-- Spring Boot Maven Plugin -->
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+    </plugin>
+
+    <!-- Build Helper Plugin to Add Test Source Directories -->
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>build-helper-maven-plugin</artifactId>
+      <executions>
+        <execution>
+          <id>add-test-source</id>
+          <phase>process-resources</phase>
+          <goals>
+            <goal>add-test-source</goal>
+          </goals>
+          <configuration>
+            <sources>
+              <source>src/it/java</source>
+              <source>src/e2e/java</source>
+            </sources>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+
+    <!-- Surefire Plugin for Unit Tests -->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-surefire-plugin</artifactId>
+      <configuration>
+        <skipTests>${skip.unit-tests}</skipTests>
+        <includes>
+          <include>**/*Test.java</include>
+        </includes>
+      </configuration>
+    </plugin>
+
+    <!-- Failsafe Plugin for Integration Tests -->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-failsafe-plugin</artifactId>
+      <executions>
+        <execution>
+          <configuration>
+            <skipTests>${skip.integration-tests}</skipTests>
+            <includes>
+              <include>**/*ApplicationTests.java</include>
+              <include>**/*IT.java</include>
+            </includes>
+          </configuration>
+          <goals>
+            <goal>integration-test</goal>
+            <goal>verify</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+
+    <!-- JaCoCo Plugin for Code Coverage -->
+    <plugin>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.7</version> <!-- Ensure using the latest version -->
+      <executions>
+        <execution>
+          <goals>
+            <goal>prepare-agent</goal> <!-- Prepare the agent to collect coverage -->
+          </goals>
+        </execution>
+        <execution>
+          <goals>
+            <goal>report</goal> <!-- Generate code coverage report -->
+          </goals>
+          <phase>verify</phase> <!-- Bind it to the 'verify' phase after tests -->
+          <configuration>
+            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+            <outputDirectory>${project.build.directory}/jacoco-report</outputDirectory>
+            <output>xml</output> <!-- Output format as XML -->
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+
+    <!-- Coveralls Plugin for Code Coverage Reporting -->
+    <plugin>
+      <groupId>org.eluder.coveralls</groupId>
+      <artifactId>coveralls-maven-plugin</artifactId>
+      <version>4.3.0</version>
+      <dependencies>
+        <!-- Dependency required for JDK 9 or higher -->
+        <dependency>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+          <version>2.3.1</version>
+        </dependency>
+      </dependencies>
+    </plugin>
+
+    <!-- SonarQube Plugin for Code Quality -->
+    <plugin>
+      <groupId>org.sonarsource.scanner.maven</groupId>
+      <artifactId>sonar-maven-plugin</artifactId>
+      <version>3.8.0.2131</version>
+    </plugin>
+  </plugins>
+
+  <pluginManagement>
     <plugins>
+      <!-- JaCoCo Plugin in Profile -->
       <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>add-test-source</id>
-            <phase>process-resources</phase>
             <goals>
-              <goal>add-test-source</goal>
+              <goal>prepare-agent</goal>
             </goals>
-            <configuration>
-              <sources>
-                <source>src/it/java</source>
-                <source>src/e2e/java</source>
-              </sources>
-            </configuration>
           </execution>
         </executions>
       </plugin>
+
+      <!-- Surefire Plugin with JaCoCo Integration -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skipTests>${skip.unit-tests}</skipTests>
-          <includes>
-            <include>**/*Test.java</include>
-          </includes>
+          <argLine>${surefireArgLine}</argLine>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <executions>
-          <execution>
-            <configuration>
-              <skipTests>${skip.integration-tests}</skipTests>
-              <includes>
-                <include>**/*ApplicationTests.java</include>
-                <include>**/*IT.java</include>
-              </includes>
-            </configuration>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
-    <pluginManagement>
+  </pluginManagement>
+</build>
+
+<profiles>
+  <!-- JaCoCo Profile (Enable for Code Coverage) -->
+  <profile>
+    <id>jacoco</id>
+    <build>
       <plugins>
-        <!--<plugin>
+        <!-- JaCoCo Plugin to generate code coverage only for Surefire tests -->
+        <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.6</version>
           <configuration>
-            <excludes>
-              <exclude>**/*Application.*</exclude>
-              <exclude>**/model/*</exclude>
-              <!-- The following is just to avoid the instrumentation error
-                (when running EmployeeWebControllerTest) due to the
-                HtmlUnit class StyleAttributes$Definition
-                (method too large) -->
-              <exclude>**/htmlunit/*</exclude>
-            </excludes>
+            <propertyName>surefireArgLine</propertyName>
           </configuration>
+        </plugin>
+
+        <!-- Surefire Plugin Configuration -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <argLine>${surefireArgLine}</argLine>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
+
+  <!-- Profile for E2E Tests -->
+  <profile>
+    <id>e2e-tests</id>
+    <activation>
+      <activeByDefault>false</activeByDefault>
+    </activation>
+    <properties>
+      <skip.unit-tests>true</skip.unit-tests>
+      <skip.integration-tests>true</skip.integration-tests>
+    </properties>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
           <executions>
             <execution>
+              <id>reserve-tomcat-port</id>
               <goals>
-                <!-- binds by default to the phase "initialize" -->
-                <goal>prepare-agent</goal>
-                <!-- binds by default to the phase "verify" -->
-                <goal>report</goal>
+                <goal>reserve-network-port</goal>
+              </goals>
+              <phase>process-resources</phase>
+              <configuration>
+                <portNames>
+                  <portName>tomcat.http.port</portName>
+                </portNames>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>pre-integration-test</id>
+              <goals>
+                <goal>start</goal>
+              </goals>
+              <configuration>
+                <arguments>
+                  <argument>--server.port=${tomcat.http.port}</argument>
+                </arguments>
+              </configuration>
+            </execution>
+            <execution>
+              <id>post-integration-test</id>
+              <goals>
+                <goal>stop</goal>
               </goals>
             </execution>
           </executions>
-        </plugin> -->
+        </plugin>
 
-         <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.7</version> <!-- Make sure to use the latest version -->
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>prepare-agent</goal>
-                        <goal>report</goal>
-                    </goals>
-                    <configuration>
-                        <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                        <outputDirectory>${project.build.directory}/jacoco-report</outputDirectory>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
-         <!-- You must run coveralls:report explicitly -->
         <plugin>
-          <groupId>org.eluder.coveralls</groupId>
-          <artifactId>coveralls-maven-plugin</artifactId>
-          <version>4.3.0</version>
-          <dependencies>
-            <!-- This is required when using JDK 9 or higher
-              since javax.xml.bind has been removed from the JDK -->
-            <dependency>
-              <groupId>javax.xml.bind</groupId>
-              <artifactId>jaxb-api</artifactId>
-              <version>2.3.1</version>
-            </dependency>
-          </dependencies>
-        </plugin>
-        <plugin>
-          <groupId>org.sonarsource.scanner.maven</groupId>
-          <artifactId>sonar-maven-plugin</artifactId>
-          <version>3.8.0.2131</version>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>e2e-tests</id>
+              <configuration>
+                <includes>
+                  <include>**/*E2E.java</include>
+                </includes>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <systemPropertyVariables>
+              <server.port>${tomcat.http.port}</server.port>
+            </systemPropertyVariables>
+          </configuration>
         </plugin>
       </plugins>
-    </pluginManagement>
-  </build>
+    </build>
+  </profile>
+</profiles>
 
-  <profiles>
-    <profile>
-      <id>jacoco</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <configuration>
-              <!-- Don't use the default property so that we'll do code 
-                coverage only for surefire tests (not for failsafe) -->
-              <propertyName>surefireArgLine</propertyName>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <!-- Code coverage for surefire tests only -->
-              <argLine>${surefireArgLine}</argLine>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>e2e-tests</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <properties>
-        <skip.unit-tests>true</skip.unit-tests>
-        <skip.integration-tests>true</skip.integration-tests>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>reserve-tomcat-port</id>
-                <goals>
-                  <goal>reserve-network-port</goal>
-                </goals>
-                <phase>process-resources</phase>
-                <configuration>
-                  <portNames>
-                    <portName>tomcat.http.port</portName>
-                  </portNames>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>pre-integration-test</id>
-                <goals>
-                  <goal>start</goal>
-                </goals>
-                <configuration>
-                  <arguments>
-                    <argument>--server.port=${tomcat.http.port}</argument>
-                  </arguments>
-                </configuration>
-              </execution>
-              <execution>
-                <id>post-integration-test</id>
-                <goals>
-                  <goal>stop</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>e2e-tests</id>
-                <configuration>
-                  <includes>
-                    <include>**/*E2E.java</include>
-                  </includes>
-                </configuration>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <systemPropertyVariables>
-                <server.port>${tomcat.http.port}</server.port>
-              </systemPropertyVariables>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
