@@ -26,7 +26,7 @@ public class EmployeeService {
 	}
 
 	public Employee insertNewEmployee(Employee employee) {
-		employee.setId(10);
+		employee.setId(new Long(10));
 		employee.setId(null);
 		return employeeRepository.save(employee);
 	}
