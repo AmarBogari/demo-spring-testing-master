@@ -42,7 +42,7 @@ public class EmployeeService {
             throw new IllegalArgumentException("Item count and price must be non-negative.");
         }
 
-        double discount = 1;
+        double discount = 0;
         if (itemCount >= 10) {
             discount = 0.2; // 20% discount
         } else if (itemCount >= 5) {
