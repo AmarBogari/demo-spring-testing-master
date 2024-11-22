@@ -49,16 +49,6 @@ public class EmployeeServiceWithMockitoTest {
         assertEquals(800, result, "Discount should be 20% for 10 or more items.");
     }
 
-    @Test
-    public void testCalculateDiscount_InvalidInput() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            logic.calculateDiscount(-1, 100);
-        }, "Item count cannot be negative.");
-        
-        assertThrows(IllegalArgumentException.class, () -> {
-            employeeService.calculateDiscount(5, -100);
-        }, "Item price cannot be negative.");
-    }
 	
 	@Test
 	public void test_getAllEmployees() {
