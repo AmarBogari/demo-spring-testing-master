@@ -37,4 +37,18 @@ public class EmployeeService {
 		return employeeRepository.save(replacement);
 	}
 
+	public double calculateDiscount(int itemCount, double itemPrice) {
+        if (itemCount < 0 || itemPrice < 0) {
+            throw new IllegalArgumentException("Item count and price must be non-negative.");
+        }
+
+        double discount = 0;
+        if (itemCount >= 10) {
+            discount = 0.2; // 20% discount
+        } else if (itemCount >= 5) {
+            discount = 0.1; // 10% discount
+        }
+
+        return itemCount * itemPrice * (1 - discount);
+    }
 }
