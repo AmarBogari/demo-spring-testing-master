@@ -29,6 +29,35 @@ public class EmployeeServiceWithMockitoTest {
 	@InjectMocks
 	private EmployeeService employeeService;
 
+	  @Test
+    public void testCalculateDiscount_NoDiscount() {
+        double result = employeeService.calculateDiscount(3, 100);
+        assertEquals(300, result, "Discount should be 0 for less than 5 items.");
+    }
+
+    @Test
+    public void testCalculateDiscount_10PercentDiscount() {
+        double result = employeeService.calculateDiscount(7, 100);
+        assertEquals(630, result, "Discount should be 10% for 5 to 9 items.");
+    }
+
+    @Test
+    public void testCalculateDiscount_20PercentDiscount() {
+        double result = employeeService.calculateDiscount(10, 100);
+        assertEquals(800, result, "Discount should be 20% for 10 or more items.");
+    }
+
+    @Test
+    public void testCalculateDiscount_InvalidInput() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            logic.calculateDiscount(-1, 100);
+        }, "Item count cannot be negative.");
+        
+        assertThrows(IllegalArgumentException.class, () -> {
+            employeeService.calculateDiscount(5, -100);
+        }, "Item price cannot be negative.");
+    }
+	
 	@Test
 	public void test_getAllEmployees() {
 		Employee employee1 = new Employee(1L, "first", 1000);
